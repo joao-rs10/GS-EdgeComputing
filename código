@@ -1,0 +1,86 @@
+#include <Wire.h>          // Biblioteca para comunicação I2C
+#include <LiquidCrystal_I2C.h> // Biblioteca para LCD via I2C
+
+// Definição dos pinos
+const int TRIG_PIN = 10;   // Trigger do sensor ultrassônico
+const int ECHO_PIN = 9;    // Echo do sensor ultrassônico
+const int LED_VERDE = 2;
+const int LED_AMARELO = 3;
+const int LED_VERMELHO = 4;
+const int BUZZER_PIN = 5;  // 
+
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Exemplo com endereço 0x27, 16 colunas, 2 linhas
+
+// Variáveis
+long duracao;             // Duração do pulso para o ultrassônico
+int distanciaCm;          // Distância em centímetros (nível da água)
+unsigned long tempoBuzzerAtivo = 0; // Para controlar o tempo do buzzer
+
+void setup() {
+  Serial.begin(9600); // Inicializa a comunicação serial
+
+  // Configuração dos pinos
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARELO, OUTPUT);
+  pinMode(LED_VERMELHO, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // Inicializa o LCD I2C
+  lcd.init();      // Inicializa o LCD
+  lcd.backlight(); // Liga o backlight do LCD
+  lcd.print("Nivel da Agua:"); // Mensagem inicial no LCD
+}
+
+void loop() {
+  // Leitura do Sensor Ultrassônico (RF01) 
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  duracao = pulseIn(ECHO_PIN, HIGH);
+  distanciaCm = duracao * 0.034 / 2; // Calcula a distância em cm
+
+  // Exibe no Serial Monitor (RF04) 
+  Serial.print("Nível da Água: ");
+  Serial.print(distanciaCm);
+  Serial.println(" cm");
+
+  // Exibe no Display LCD (RF04) 
+  lcd.setCursor(0, 1); // Vai para a segunda linha do LCD
+  lcd.print(distanciaCm);
+  lcd.print(" cm   "); // Adiciona espaços para limpar resíduos
+
+  // Lógica dos LEDs e Buzzer (RF02, RF03, RN01, RN02, RN03, RN04) 
+  if (distanciaCm <= 5) { // RN01: Nível até 5 cm = LED verde (normal) 
+    digitalWrite(LED_VERDE, HIGH);
+    digitalWrite(LED_AMARELO, LOW);
+    digitalWrite(LED_VERMELHO, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+    tempoBuzzerAtivo = 0;
+  } else if (distanciaCm >= 6 && distanciaCm <= 10) { // RN02: Entre 6 e 10 cm = LED amarelo (atenção) 
+    digitalWrite(LED_VERDE, LOW);
+    digitalWrite(LED_AMARELO, HIGH);
+    digitalWrite(LED_VERMELHO, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+    tempoBuzzerAtivo = 0;
+  } else if (distanciaCm > 10) { // RN03: Acima de 10 cm = LED vermelho + buzzer 
+    digitalWrite(LED_VERDE, LOW);
+    digitalWrite(LED_AMARELO, LOW);
+    digitalWrite(LED_VERMELHO, HIGH);
+
+    // RN04: O buzzer só ativa se o nível crítico persistir por mais de 5 segundos 
+    if (tempoBuzzerAtivo == 0) {
+      tempoBuzzerAtivo = millis();
+    }
+    if (millis() - tempoBuzzerAtivo >= 5000) { // Buzzer após 5 segundos
+      digitalWrite(BUZZER_PIN, HIGH);
+    }
+  }
+
+  delay(1000); // Atualiza os dados a cada segundo (RF05) 
+}
