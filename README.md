@@ -3,7 +3,7 @@ AquaLink é uma solução inteligente e acessível desenvolvida para proteger co
 Fácil de instalar, de baixo custo e com alta replicabilidade, o AquaLink é ideal para locais com infraestrutura limitada, podendo ser integrado a painéis informativos, aplicativos móveis e redes sociais, ampliando o alcance dos alertas.
 
 link para simulçao no wokwi: https://wokwi.com/projects/432955922824030209
-link para o vídeo explicativo: 
+link para o vídeo explicativo: https://www.youtube.com/watch?v=N_uH4NY0U8Y
 
 integrantes: 
 João Vitor Reis Silva.   RM: 563115
